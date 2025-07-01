@@ -9,8 +9,11 @@ from openai import OpenAI
 
 # Load OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets.get("openai_api_key")
+
 if not openai_api_key:
-    raise ValueError("❌ Missing OpenAI API key in .streamlit/secrets.toml")
+    st.error("❌ Missing OpenAI API key! Please add it to .streamlit/secrets.toml")
+    st.stop()
+
 
 # Initialize OpenAI client
 client = OpenAI(api_key=openai_api_key)

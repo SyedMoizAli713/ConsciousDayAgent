@@ -2,25 +2,31 @@ import os
 import streamlit as st
 from openai import OpenAI
 
-# ✅ Load the API key from Streamlit secrets
-client = OpenAI(api_key=st.secrets["openai_api_key"])
+# ✅ Load API key from Streamlit secrets
+openai_api_key = st.secrets.get("openai_api_key")
+
+if not openai_api_key:
+    raise ValueError("❌ Missing OpenAI API key in .streamlit/secrets.toml")
+
+client = OpenAI(api_key=openai_api_key)
 
 def generate_reflection(journal, intention, dream, priorities):
     prompt = f"""
-    You are a daily reflection and planning assistant.
-    Journal: {journal}
-    Intention: {intention}
-    Dream: {dream}
-    Priorities: {priorities}
-    Provide a thoughtful reflection and actionable strategy.
-    """
+You are a daily reflection and planning assistant.
+Given the following inputs:
 
+Morning Journal: {journal}
+Dream: {dream}
+Intention: {intention}
+Top 3 Priorities: {priorities}
+
+Please generate a thoughtful reflection and a brief actionable strategy for the day.
+"""
     response = client.chat.completions.create(
-        model="gpt-4o",   # or "gpt-3.5-turbo" if you want cheaper
+        model="gpt-4o",  # or "gpt-3.5-turbo" etc.
         messages=[
-            {"role": "system", "content": "You are a helpful journaling assistant."},
+            {"role": "system", "content": "You are an expert reflection and planning assistant."},
             {"role": "user", "content": prompt}
         ]
     )
-
     return response.choices[0].message.content

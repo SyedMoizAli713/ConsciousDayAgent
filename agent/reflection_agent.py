@@ -1,5 +1,8 @@
-import os
-from openai import OpenAI
+import openai
+import streamlit as st
+
+openai.api_key = st.secrets["openai_api_key"]
+
 
 # ✅ Load keys directly from environment (Streamlit Secrets sets them as env)
 client = OpenAI(

@@ -1,8 +1,10 @@
 import os
 from openai import OpenAI
 
+# ✅ Set base URL for OpenRouter
 os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
 
+# ✅ Initialize OpenAI client with environment variable key
 client = OpenAI(
     base_url=os.environ["OPENAI_API_BASE"],
     api_key=os.environ["OPENAI_API_KEY"],
@@ -42,12 +44,3 @@ def generate_reflection(journal, intention, dream, priorities):
     )
     
     return completion.choices[0].message.content
-import os
-from openai import OpenAI
-
-os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
-
-client = OpenAI(
-    base_url=os.environ["OPENAI_API_BASE"],
-    api_key=os.environ["OPENAI_API_KEY"],
-)

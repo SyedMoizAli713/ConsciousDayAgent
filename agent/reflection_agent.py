@@ -1,27 +1,26 @@
-import openai
+import os
 import streamlit as st
+from openai import OpenAI
 
-openai.api_key = st.secrets["openai_api_key"]
-
-
-# ✅ Load keys directly from environment (Streamlit Secrets sets them as env)
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.environ.get("OPENAI_API_KEY"),
-)
+# ✅ Load the API key from Streamlit secrets
+client = OpenAI(api_key=st.secrets["openai_api_key"])
 
 def generate_reflection(journal, intention, dream, priorities):
     prompt = f"""
-    You are a daily reflection and planning assistant...
-    ... your existing full prompt here ...
+    You are a daily reflection and planning assistant.
+    Journal: {journal}
+    Intention: {intention}
+    Dream: {dream}
+    Priorities: {priorities}
+    Provide a thoughtful reflection and actionable strategy.
     """
-    completion = client.chat.completions.create(
-        extra_headers={
-            "HTTP-Referer": "https://consciousdayagent.streamlit.app",
-            "X-Title": "ConsciousDayAgent",
-        },
-        model="openai/gpt-4o",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=1000
+
+    response = client.chat.completions.create(
+        model="gpt-4o",   # or "gpt-3.5-turbo" if you want cheaper
+        messages=[
+            {"role": "system", "content": "You are a helpful journaling assistant."},
+            {"role": "user", "content": prompt}
+        ]
     )
-    return completion.choices[0].message.content
+
+    return response.choices[0].message.content

@@ -42,3 +42,12 @@ def generate_reflection(journal, intention, dream, priorities):
     )
     
     return completion.choices[0].message.content
+import os
+from openai import OpenAI
+
+os.environ["OPENAI_API_BASE"] = "https://openrouter.ai/api/v1"
+
+client = OpenAI(
+    base_url=os.environ["OPENAI_API_BASE"],
+    api_key=os.environ["OPENAI_API_KEY"],
+)

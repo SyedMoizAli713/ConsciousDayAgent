@@ -1,4 +1,10 @@
 import streamlit as st
+import os
+
+st.write("Current working directory:", os.getcwd())
+st.write("Loaded secret:", st.secrets.get("openai_api_key", "❌ Not found"))
+
+import streamlit as st
 from openai import OpenAI
 
 # Load OpenAI API key from Streamlit secrets

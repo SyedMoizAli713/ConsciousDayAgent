@@ -8,15 +8,15 @@ import streamlit as st
 from openai import OpenAI
 
 # Load OpenAI API key from Streamlit secrets
-openai_api_key = st.secrets.get("openai_api_key")
+OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY")
 
-if not openai_api_key:
+if not OPENAI_API_KEY:
     st.error("❌ Missing OpenAI API key! Please add it to .streamlit/secrets.toml")
     st.stop()
 
 
 # Initialize OpenAI client
-client = OpenAI(api_key=openai_api_key)
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Function to generate reflection
 def generate_reflection(journal, intention, dream, priorities):

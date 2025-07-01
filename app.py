@@ -1,95 +1,55 @@
 import streamlit as st
-import sqlite3
-from datetime import datetime
-from agent.reflection_agent import generate_reflection
+from openai import OpenAI
 
-# ✅ Page config
-st.set_page_config(page_title="ConsciousDay Agent", layout="centered")
-st.title("ConsciousDay Agent")
-st.write("Reflect inward. Act with clarity.")
+# Load OpenAI API key from Streamlit secrets
+openai_api_key = st.secrets.get("openai_api_key")
+if not openai_api_key:
+    raise ValueError("❌ Missing OpenAI API key in .streamlit/secrets.toml")
 
-# ✅ Database connection
-conn = sqlite3.connect('entries.db', check_same_thread=False)
-c = conn.cursor()
+# Initialize OpenAI client
+client = OpenAI(api_key=openai_api_key)
 
-# 🔧 Create table if not exists (safety check)
-c.execute('''
-CREATE TABLE IF NOT EXISTS entries (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT,
-    journal TEXT,
-    intention TEXT,
-    dream TEXT,
-    priorities TEXT,
-    reflection TEXT,
-    strategy TEXT
-)
-''')
-conn.commit()
+# Function to generate reflection
+def generate_reflection(journal, intention, dream, priorities):
+    prompt = f"""
+You are a daily reflection and planning assistant.
+Given the following inputs:
 
-# ✅ Form inputs
-with st.form("journal_form"):
-    st.subheader("Morning Journal")
-    journal = st.text_area("Write your morning journal here")
+Morning Journal: {journal}
+Dream: {dream}
+Intention: {intention}
+Top 3 Priorities: {priorities}
 
-    st.subheader("Dream")
-    dream = st.text_area("Describe your dream")
+Please generate a thoughtful reflection and a brief actionable strategy for the day.
+"""
 
-    st.subheader("Intention of the Day")
-    intention = st.text_input("What's your intention for today?")
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are an expert reflection and planning assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return response.choices[0].message.content
 
-    st.subheader("Top 3 Priorities")
-    priorities = st.text_area("List your top 3 priorities for today")
+# --- Streamlit UI ---
+st.set_page_config(page_title="🪞 Conscious Day Planner", layout="centered")
+st.title("🪞 Daily Reflection & Planner")
+st.write("Write your thoughts and get a focused plan for the day.")
 
-    submitted = st.form_submit_button("Submit")
+with st.form("reflection_form"):
+    journal = st.text_area("🌅 Morning Journal", height=150)
+    dream = st.text_input("💭 What did you dream about?")
+    intention = st.text_input("🎯 Today's intention")
+    priorities = st.text_input("✅ Top 3 Priorities (comma-separated)")
+
+    submitted = st.form_submit_button("Generate Reflection")
 
 if submitted:
-    with st.spinner("Processing your reflection..."):
+    with st.spinner("Generating your reflection..."):
         try:
-            reflection_output = generate_reflection(journal, intention, dream, priorities)
-            st.success("Reflection generated successfully!")
+            output = generate_reflection(journal, intention, dream, priorities)
+            st.success("Here’s your reflection and plan:")
+            st.markdown(output)
         except Exception as e:
-            st.error(f"Error generating reflection: {e}")
-            reflection_output = "Error generating reflection."
-
-    # ✅ Save to DB
-    c.execute('''
-        INSERT INTO entries (date, journal, intention, dream, priorities, reflection, strategy)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (
-        datetime.now().strftime("%Y-%m-%d"),
-        journal,
-        intention,
-        dream,
-        priorities,
-        reflection_output,
-        reflection_output  # Using same output for both columns as per current schema
-    ))
-    conn.commit()
-
-    st.write("### ✨ AI Generated Reflection & Strategy")
-    st.write(reflection_output)
-
-# ✅ View previous entries
-st.subheader("📅 View Previous Reflections")
-selected_date = st.date_input("Select date to view entries")
-
-if st.button("Load Entries"):
-    c.execute('SELECT * FROM entries WHERE date=?', (selected_date.strftime("%Y-%m-%d"),))
-    data = c.fetchall()
-    if data:
-        for entry in data:
-            st.markdown(f"""
-            **Date:** {entry[1]}  
-            **Journal:** {entry[2]}  
-            **Intention:** {entry[3]}  
-            **Dream:** {entry[4]}  
-            **Priorities:** {entry[5]}  
-            **Reflection & Strategy:** {entry[6]}
-            """)
-            st.markdown("---")
-    else:
-        st.info("No entries found for this date.")
-
-# ✅ Close DB connection
-conn.close()
+            st.error(f"Something went wrong: {e}")
